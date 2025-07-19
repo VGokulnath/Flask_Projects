@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocChatWeb - Chat with Your Documents</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            text-align: right;
+        }
+
+        .message.ai {
+            text-align: left;
+        }
+
+        .message-bubble {
+            display: inline-block;
+            padding: 15px 20px;
+            border-radius: 20px;
+            max-width: 70%;
+            word-wrap: break-word;
+            position: relative;
+        }
+
+        .message.user .message-bubble {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .message.ai .message-bubble {
+            background: white;
+            color: #333;
+            border: 2px solid #e9ecef;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .message-time {
+            font-size: 0.8em;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        .input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .input-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .input-field {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-field:focus {
+            border-color: #667eea;
+        }
+
+        .send-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease;
+            font-size: 20px;
+        }
+
+        .send-button:hover {
+            transform: scale(1.1);
+        }
+
+        .send-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .reload-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        .reload-button:hover {
+            background: #218838;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .welcome-message h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .welcome-message p {
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                height: 90vh;
+                margin: 10px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .message-bubble {
+                max-width: 85%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>DocChatWeb</h1>
+            <p>Chat with your Markdown documents using AI</p>
+        </div>
+        
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <div class="welcome-message">
+                    <h3>Welcome to DocChatWeb!</h3>
+                    <p>Ask questions about your document and get AI-powered answers.</p>
+                    <p>The AI will only use information from your loaded Markdown document.</p>
+                    <p>If the answer isn't in the document, I'll let you know!</p>
+                </div>
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Getting your answer...</p>
+            </div>
+            
+            <div class="input-container">
+                <div class="input-form">
+                    <input 
+                        type="text" 
+                        id="questionInput" 
+                        class="input-field" 
+                        placeholder="Ask a question about your document..."
+                        autocomplete="off"
+                    >
+                    <button id="sendButton" class="send-button" title="Send message">
+                        ➤
+                    </button>
+                    <button id="reloadButton" class="reload-button" title="Reload document">
+                        Reload Doc
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class DocChatWeb {
+            constructor() {
+                this.chatMessages = document.getElementById('chatMessages');
+                this.questionInput = document.getElementById('questionInput');
+                this.sendButton = document.getElementById('sendButton');
+                this.reloadButton = document.getElementById('reloadButton');
+                this.loading = document.getElementById('loading');
+                
+                this.initializeEventListeners();
+            }
+
+            initializeEventListeners() {
+                this.sendButton.addEventListener('click', () => this.sendQuestion());
+                this.reloadButton.addEventListener('click', () => this.reloadDocument());
+                
+                this.questionInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendQuestion();
+                    }
+                });
+
+                this.questionInput.addEventListener('input', () => {
+                    this.sendButton.disabled = this.questionInput.value.trim() === '';
+                });
+            }
+
+            async sendQuestion() {
+                const question = this.questionInput.value.trim();
+                if (!question) return;
+
+                // Add user message to chat
+                this.addMessage(question, 'user');
+                
+                // Clear input and disable send button
+                this.questionInput.value = '';
+                this.sendButton.disabled = true;
+                
+                // Show loading
+                this.showLoading(true);
+
+                try {
+                    const response = await fetch('/ask', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ question: question })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        this.addMessage(data.answer, 'ai', data.timestamp);
+                    } else {
+                        this.addErrorMessage(data.error || 'An error occurred');
+                    }
+                } catch (error) {
+                    this.addErrorMessage('Failed to connect to server');
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+            async reloadDocument() {
+                this.reloadButton.disabled = true;
+                this.reloadButton.textContent = 'Reloading...';
+
+                try {
+                    const response = await fetch('/reload', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        this.addMessage('Document reloaded successfully! 📄', 'ai');
+                    } else {
+                        this.addErrorMessage(data.error || 'Failed to reload document');
+                    }
+                } catch (error) {
+                    this.addErrorMessage('Failed to connect to server');
+                } finally {
+                    this.reloadButton.disabled = false;
+                    this.reloadButton.textContent = 'Reload Doc';
+                }
+            }
+
+            addMessage(content, sender, timestamp = null) {
+                // Remove welcome message if it exists
+                const welcomeMessage = this.chatMessages.querySelector('.welcome-message');
+                if (welcomeMessage) {
+                    welcomeMessage.remove();
+                }
+
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender}`;
+
+                const bubbleDiv = document.createElement('div');
+                bubbleDiv.className = 'message-bubble';
+                bubbleDiv.textContent = content;
+
+                messageDiv.appendChild(bubbleDiv);
+
+                if (timestamp) {
+                    const timeDiv = document.createElement('div');
+                    timeDiv.className = 'message-time';
+                    timeDiv.textContent = timestamp;
+                    messageDiv.appendChild(timeDiv);
+                }
+
+                this.chatMessages.appendChild(messageDiv);
+                this.scrollToBottom();
+            }
+
+            addErrorMessage(error) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.textContent = `Error: ${error}`;
+                this.chatMessages.appendChild(errorDiv);
+                this.scrollToBottom();
+            }
+
+            showLoading(show) {
+                if (show) {
+                    this.loading.style.display = 'block';
+                    this.chatMessages.style.display = 'none';
+                } else {
+                    this.loading.style.display = 'none';
+                    this.chatMessages.style.display = 'block';
+                }
+            }
+
+            scrollToBottom() {
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+        }
+
+        // Initialize the app when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new DocChatWeb();
+        });
+    </script>
+</body>
+</html>
