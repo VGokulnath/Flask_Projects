@@ -5,13 +5,20 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from datetime import datetime
 import pytz
+import json
+import os
+from google.oauth2 import service_account
+
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+
+creds_dict = json.loads(os.getenv('GOOGLE_CREDS'))
+creds = service_account.Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
 
 app = Flask(__name__)
 
 SERVICE_ACCOUNT_FILE = 'credentials.json'
 SPREADSHEET_ID = '10sBuEZLkLHQQhJ5qoNlG2_qzGnPvOzzXcX5ly13RGPc'
 
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 creds = service_account.Credentials.from_service_account_file(
     SERVICE_ACCOUNT_FILE, scopes=SCOPES
 )
