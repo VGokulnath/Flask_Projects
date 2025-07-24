@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Paste WhatsApp Chat Text</title>
+</head>
+<body>
+    <h1>Paste Chat/Text Content</h1>
+    <form method="POST">
+        <textarea name="doc_text" rows="15" cols="80" placeholder="Paste your Google Doc or chat text here..."></textarea><br>
+        <button type="submit">Extract & Save</button>
+    </form>
+
+    {% if extracted %}
+        <h2>✅ Extracted Fields:</h2>
+        <ul>
+            {% for key, value in extracted.items() %}
+                <li><strong>{{ key }}:</strong> {{ value }}</li>
+            {% endfor %}
+        </ul>
+        <p>✅ Data has been saved to Google Sheet.</p>
+    {% endif %}
+</body>
+</html>
