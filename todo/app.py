@@ -16,12 +16,9 @@ creds = service_account.Credentials.from_service_account_info(creds_dict, scopes
 
 app = Flask(__name__)
 
-SERVICE_ACCOUNT_FILE = 'credentials.json'
+
 SPREADSHEET_ID = '10sBuEZLkLHQQhJ5qoNlG2_qzGnPvOzzXcX5ly13RGPc'
 
-creds = service_account.Credentials.from_service_account_file(
-    SERVICE_ACCOUNT_FILE, scopes=SCOPES
-)
 sheet_service = build('sheets', 'v4', credentials=creds)
 
 def extract_fields(text):
